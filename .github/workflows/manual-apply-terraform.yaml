@@ -1,0 +1,101 @@
+name: manual-apply-terraform
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_name:
+        description: 'Deployment name (e.g. gm-dev-usea1)'
+        required: true
+        type: string
+
+jobs:
+  apply-terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ops/terraform
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Read Deployment Configuration
+        id: read-deployment-config
+        uses: ./.github/actions/read-deployment-config
+        with:
+          deployment_name: ${{ github.event.inputs.deployment_name }}
+
+      - name: Login to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ steps.read-deployment-config.outputs.aws_region }}
+          role-to-assume: arn:aws:iam::${{ steps.read-deployment-config.outputs.aws_account_id }}:role/github-actions-role
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.0.0
+        with:
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+      - name: Generate Terraform Cloud config
+        env:
+          TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-${{ github.event.inputs.deployment_name }}"
+          Organization: 'Sorenson'
+        run: |
+          cat ./backend.tf.tmpl | envsubst > backend.tf
+
+      - name: Retrieve Existing ECS Service Status
+        id: retrieve-service-status
+        run: |
+          ECS_CLUSTER=${{ steps.read-deployment-config.outputs.ecs_cluster_name }}
+          SERVICE_NAME=${{ steps.read-deployment-config.outputs.component_name }}-${{ steps.read-deployment-config.outputs.environment }}
+
+          CLUSTER_STATUS=$(aws ecs describe-clusters --clusters $ECS_CLUSTER --query "failures[0].reason" --output text | awk '{print toupper($0)}')
+          if [ "$CLUSTER_STATUS" = "MISSING" ]; then
+            echo "Cluster '$ECS_CLUSTER' does not exist. Using bootstrap image."
+            exit 0
+          fi
+
+          SERVICE_STATUS=$(aws ecs describe-services --services $SERVICE_NAME --cluster $ECS_CLUSTER --query "services[0].status" --output text | awk '{print toupper($0)}')
+
+          case $SERVICE_STATUS in
+            ACTIVE)
+              echo "Service is active. Retrieving image from task definition..."
+              TASK_DEFINITION=$(aws ecs describe-services --services $SERVICE_NAME --cluster $ECS_CLUSTER --query "services[0].taskDefinition" --output text)
+              ECS_CONTAINER_IMAGE=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION --query "taskDefinition.containerDefinitions[0].image" --output text)
+              echo "Setting ecs_container_image: '$ECS_CONTAINER_IMAGE'"
+              echo "ecs_container_image=$ECS_CONTAINER_IMAGE" >> $GITHUB_OUTPUT
+              ;;
+            NONE)
+              echo "Service does not exist. Using bootstrap image."
+              ;;
+            *)
+              echo "Unexpected response when retrieving ECS service status: '$SERVICE_STATUS'"
+              exit 1
+              ;;
+          esac
+
+          echo
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        env:
+          TF_VAR_deployment_id: ${{ github.event.inputs.deployment_name }}
+          TF_VAR_service_image_name: ${{ steps.retrieve-service-status.outputs.ecs_container_image }}
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve
+        env:
+          TF_VAR_deployment_id: ${{ github.event.inputs.deployment_name }}
+          TF_VAR_service_image_name: ${{ steps.retrieve-service-status.outputs.ecs_container_image }}

@@ -1,0 +1,68 @@
+name: manual-destroy-terraform
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_name:
+        description: 'Deployment name (e.g. gm-dev-usea1)'
+        required: true
+        type: string
+
+jobs:
+  destroy-terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ops/terraform
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Read Deployment Configuration
+        id: read-deployment-config
+        uses: ./.github/actions/read-deployment-config
+        with:
+          deployment_name: ${{ github.event.inputs.deployment_name }}
+
+      - name: Login to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ steps.read-deployment-config.outputs.aws_region }}
+          role-to-assume: arn:aws:iam::${{ steps.read-deployment-config.outputs.aws_account_id }}:role/github-actions-role
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.0.0
+        with:
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+      - name: Generate Terraform Cloud config
+        env:
+          TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-${{ github.event.inputs.deployment_name }}"
+          Organization: 'Sorenson'
+        run: |
+          cat ./backend.tf.tmpl | envsubst > backend.tf
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        env:
+          TF_VAR_deployment_id: ${{ github.event.inputs.deployment_name }}
+          TF_VAR_service_image_name: ${{ steps.retrieve-service-status.outputs.ecs_container_image }}
+
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve
+        env:
+          TF_VAR_deployment_id: ${{ github.event.inputs.deployment_name }}
+          TF_VAR_service_image_name: ${{ steps.retrieve-service-status.outputs.ecs_container_image }}

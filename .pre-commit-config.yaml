@@ -1,0 +1,41 @@
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.75.0
+    hooks:
+      - id: terraform_fmt
+        files: ^ops/terraform/
+      - id: terraform_validate
+        files: ^ops/terraform/
+        exclude: ^ops/terraform/modules/
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+          - --args=-json
+      - id: terraform_tflint
+        files: ^ops/terraform/
+        args:
+          - '--args=--config=__GIT_WORKING_DIR__/.tflint.hcl'
+          - '--args=--disable-rule=terraform_module_pinned_source'
+          - '--args=--disable-rule=aws_route_not_specified_target'
+          - '--args=--disable-rule=terraform_required_providers'
+          - '--args=--disable-rule=terraform_required_version'
+      - id: terraform_docs
+        args:
+          - --args=--sort-by=required
+        files: ^ops/terraform/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=5000']
+      - id: mixed-line-ending
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']

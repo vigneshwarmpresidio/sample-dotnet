@@ -1,0 +1,23 @@
+name: manual-deploy-prod
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Only for Rollback. Format: <branch>-<version>-<commit_sha>\nExample: main-1.7.0-7822008ad30037f0b390004c65adeafc3b977004'
+        required: true
+        default: 'latest'
+        type: string
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yaml
+    with:
+      deployment_name: prod
+    secrets: inherit
+
+  cd:
+    uses: ./.github/workflows/cd.yaml
+    needs: ci
+    with:
+      deployment_name: prod
+    secrets: inherit

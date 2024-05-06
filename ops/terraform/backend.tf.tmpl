@@ -1,0 +1,8 @@
+terraform {
+  cloud {
+    organization = "Sorenson"
+    workspaces {
+      name = "$TFCLOUD_WORKSPACE_NAME"
+    }
+  }
+}

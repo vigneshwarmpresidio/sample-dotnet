@@ -1,0 +1,27 @@
+name: manual-deploy-nonprod
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_name:
+        description: 'Deployment name'
+        required: true
+        type: choice
+        options:
+          - 'gm-dev-usea1'
+          - 'gm-qa-usea1'
+
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yaml
+    with:
+      deployment_name: ${{ github.event.inputs.deployment_name }}
+      push_artifacts: "true"
+    secrets: inherit
+
+  cd:
+    uses: ./.github/workflows/cd.yaml
+    needs: ci
+    with:
+      deployment_name: ${{ github.event.inputs.deployment_name }}
+    secrets: inherit

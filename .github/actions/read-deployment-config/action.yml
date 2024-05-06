@@ -1,0 +1,63 @@
+name: 'Read Deployment Config'
+description: 'Reads the configuration for the specified deployment from the embedded deployments.json file'
+inputs:
+  deployment_name:
+    description: 'The name of the deployment to read'
+    required: true
+outputs:
+  deployment_name:
+    description: "The same deployment name specified as the input to this action"
+    value: ${{ inputs.deployment_name }}
+  component_name:
+    description: "The component_name"
+    value: ${{ steps.parse-deployment-config.outputs.component_name }}
+  service_desired_count:
+    description: "The service_desired_count"
+    value: ${{ steps.parse-deployment-config.outputs.service_desired_count }}
+  service_min_capacity:
+    description: "The service_min_capacity"
+    value: ${{ steps.parse-deployment-config.outputs.service_min_capacity }}
+  service_max_capacity:
+    description: "The service_max_capacity"
+    value: ${{ steps.parse-deployment-config.outputs.service_max_capacity }}
+  product:
+    description: "The product"
+    value: ${{ steps.parse-deployment-config.outputs.product }}
+  aws_account_id:
+    description: "The aws_account_id"
+    value: ${{ steps.parse-deployment-config.outputs.aws_account_id }}
+  aws_region:
+    description: "The aws_region"
+    value: ${{ steps.parse-deployment-config.outputs.aws_region }}
+  environment:
+    description: "The environment"
+    value: ${{ steps.parse-deployment-config.outputs.environment }}
+  outputs_workspace:
+    description: "The outputs_workspace"
+    value: ${{ steps.parse-deployment-config.outputs.outputs_workspace }}
+  r53_public_zone_name:
+    description: "The r53_public_zone_name"
+    value: ${{ steps.parse-deployment-config.outputs.r53_public_zone_name }}
+  ecs_cluster_name:
+    description: "The ecs_cluster_name"
+    value: ${{ steps.create-composite-values.outputs.ecs_cluster_name }}
+  service_name:
+    description: "The service_name"
+    value: ${{ steps.create-composite-values.outputs.service_name }}
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Read Deployment Configuration for ${{ inputs.deployment_name }}
+      id: parse-deployment-config
+      shell: bash
+      run: |
+        jq '.common * ."${{ inputs.deployment_name }}"' $GITHUB_WORKSPACE/ops/deployments.json | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_OUTPUT
+
+    - name: Create Composite Values
+      id: create-composite-values
+      shell: bash
+      run: |
+        echo "service_name=${{ steps.parse-deployment-config.outputs.component_name }}-${{ steps.parse-deployment-config.outputs.environment }}" >> $GITHUB_OUTPUT
+        echo "ecs_cluster_name=${{ steps.parse-deployment-config.outputs.product }}-${{ steps.parse-deployment-config.outputs.environment }}" >> $GITHUB_OUTPUT

@@ -1,0 +1,4 @@
+exclude:
+  - release/*
+  - hotfix/*
+delete_closed_pr: false

@@ -1,0 +1,17 @@
+name: on-push-feature
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+      - develop
+      - 'releases/**'
+  workflow_dispatch:
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yaml
+    with:
+      deployment_name: "gm-dev-usea1"
+      push_artifacts: "false"
+    secrets: inherit

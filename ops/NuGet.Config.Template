@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is used for NuGet authentication within the Docker container  -->
+<configuration>
+  <packageSourceCredentials>
+    <GitHubEng>
+      <add key="Username" value="sorenson-eng" />
+      <add key="ClearTextPassword" value="_GPR_AUTH_TOKEN" />
+    </GitHubEng>
+  </packageSourceCredentials>
+</configuration>

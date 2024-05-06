@@ -1,0 +1,81 @@
+name: Continuous Deployment reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      deployment_name:
+        required: true
+        type: string
+
+env:
+  REPOSITORY: ${{ github.event.repository.name }}
+  SERVICE_DIR: './Sorenson.AccountServices.MmxApiAdapter.Service'
+
+concurrency:
+  group: cd-${{ inputs.deployment_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+    env:
+      TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-${{ inputs.deployment_name }}"
+      Organization: 'Sorenson'
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ inputs.deployment_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Avoid shallow clone so nbgv can properly calculate version
+
+      - name: Read Deployment Configuration
+        id: read-deployment-config
+        uses: ./.github/actions/read-deployment-config
+        with:
+          deployment_name: ${{ inputs.deployment_name }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ steps.read-deployment-config.outputs.aws_region }}
+          role-to-assume: arn:aws:iam::${{ steps.read-deployment-config.outputs.aws_account_id }}:role/github-actions-role
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create tag name for Docker image
+        id: image_tag
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          br_name=$(echo "$BRANCH_NAME" | cut -d'/' -f2)
+          image_tag="$br_name-${{ github.sha }}"
+          echo "image_tag=$image_tag" >> $GITHUB_ENV
+
+          image_name="${{ steps.login-ecr.outputs.registry }}/$REPOSITORY:$image_tag"
+          echo "image_name=$image_name" >> $GITHUB_ENV
+
+          echo "Tag created: '$image_tag'  Full name: '$image_name''"
+
+      - name: Build Docker service image
+        run: docker build -t $image_name -f ${SERVICE_DIR}/Dockerfile . --build-arg GPR_AUTH_TOKEN=${{ secrets.GPR_AUTH_TOKEN }}
+
+      - name: Push Docker service image
+        run: docker push $image_name
+
+      - name: Apply new service image to ECS task
+        run: |
+          ECS_CLUSTER=${{ steps.read-deployment-config.outputs.ecs_cluster_name }}
+          SERVICE_NAME=${{ steps.read-deployment-config.outputs.service_name }}
+          ./.github/deploy_ecs.sh "$ECS_CLUSTER" "$SERVICE_NAME" "$image_name"
+
+      - name: Delete old images from ECR (TODO need to review this)
+        uses: LeiaInc/devops-delete-old-aws-ecr-images@v1
+        if: ${{ false }}
+        with:
+          repo-name: ${{ env.REPOSITORY }}
+          qtd-images: 100

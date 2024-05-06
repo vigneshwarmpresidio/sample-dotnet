@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MmxApiAdapter", "Sorenson.AccountServices.MmxApiAdapter.Service\Sorenson.AccountServices.MmxApiAdapter.Service.csproj", "{7B135B4D-CBEA-4875-9182-1AAABFC8047A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sorenson.AccountServices.MmxApiAdapter.Tests", "Sorenson.AccountServices.MmxApiAdapter.Tests\Sorenson.AccountServices.MmxApiAdapter.Tests.csproj", "{8BBCCAB8-EAB0-45B6-B6A0-C06CF59EBA56}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B135B4D-CBEA-4875-9182-1AAABFC8047A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B135B4D-CBEA-4875-9182-1AAABFC8047A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B135B4D-CBEA-4875-9182-1AAABFC8047A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B135B4D-CBEA-4875-9182-1AAABFC8047A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BBCCAB8-EAB0-45B6-B6A0-C06CF59EBA56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BBCCAB8-EAB0-45B6-B6A0-C06CF59EBA56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BBCCAB8-EAB0-45B6-B6A0-C06CF59EBA56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BBCCAB8-EAB0-45B6-B6A0-C06CF59EBA56}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

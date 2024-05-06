@@ -1,0 +1,82 @@
+# Perform Test/Build jobs, and optionally push the resulting Docker artifact to ECR
+name: Continuous Integration reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      deployment_name:
+        required: true
+        type: string
+      push_artifacts:
+        type: string
+        default: 'false'
+
+env:
+  REPOSITORY: ${{ github.event.repository.name }}
+  SERVICE_DIR: './Sorenson.AccountServices.MmxApiAdapter.Service'
+  TEST_DIR: './Sorenson.AccountServices.MmxApiAdapter.Tests'
+  DOTNET_VERSION: '8.0.100'
+
+concurrency:
+  group: ci-${{ inputs.deployment_name }}
+  cancel-in-progress: true
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # avoid shallow clone so nbgv can properly calculate version
+
+      - name: Setup .NET environment
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          source-url: https://nuget.pkg.github.com/sorenson-eng/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GPR_AUTH_TOKEN }}
+
+      - name: Run .NET tests
+        run: dotnet test ${{ env.TEST_DIR }} --verbosity minimal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()    # Explicitly run this step even if previous step failed
+        with:
+          name: .NET Tests            # Name of the check run which will be created
+          path: "**/test-results.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+  build-service:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Avoid shallow clone so nbgv can properly calculate version
+
+      - name: Read Deployment Configuration
+        id: read-deployment-config
+        uses: ./.github/actions/read-deployment-config
+        with:
+          deployment_name: ${{ inputs.deployment_name }}
+
+      - name: Validate inputs
+        run: |
+          if [[ "${{ inputs.push_artifacts }}" == "true" ]]; then
+            if [[ -z "${{ steps.read-deployment-config.outputs.aws_region }}" || -z "${{ steps.read-deployment-config.outputs.aws_account_id }}" ]]; then
+              echo "Error: aws_region and aws_account_id are required when push_artifacts is 'true'."
+              exit 1
+            fi
+          fi
+
+      - name: Build Docker service image
+        run: docker build -t $REPOSITORY:ciworkflow -f ${SERVICE_DIR}/Dockerfile . --build-arg GPR_AUTH_TOKEN=${{ secrets.GPR_AUTH_TOKEN }}

@@ -1,0 +1,83 @@
+# Handle PRs to main branch; invoke CI workflow (build/test) and do additional checks
+name: on-pr
+on:
+ pull_request:
+   branches:
+     - main
+
+concurrency:
+  group: pr-checks-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci.yaml
+    with:
+      deployment_name: "gm-qa-usea1"
+      push_artifacts: false
+    secrets: inherit
+
+  pr-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.0.0
+        with:
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+      - name: Generate Terraform Cloud config
+        env:
+          TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-gm-qa-usea1"
+        run: |
+          cat ./backend.tf.tmpl | envsubst > backend.tf
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: v0.44.1
+
+      - name: Setup TFDocs
+        uses: jaxxstorm/action-install-gh-release@v1.10.0
+        with:
+          repo: terraform-docs/terraform-docs
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Terraform init
+        working-directory: ./ops/terraform
+        run: |
+          terraform init
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      - name: Check Git Status
+        if: always()
+        run: |
+          git status
+          git diff --exit-code || true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: "us-east-1"
+          role-to-assume: "arn:aws:iam::392697220865:role/github-actions-role"
+
+      - name: Terraform Plan
+        working-directory: ./ops/terraform
+        run: terraform plan -no-color
+        env:
+          TF_VAR_deployment_id: gm-qa-usea1
+          TF_VAR_service_image_name: ""
