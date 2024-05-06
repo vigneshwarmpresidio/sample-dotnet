@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       deployment_name:
-        description: 'Deployment name (e.g. gm-dev-usea1)'
+        description: 'Deployment name (e.g. sli-dev-usea1)'
         required: true
         type: string
 

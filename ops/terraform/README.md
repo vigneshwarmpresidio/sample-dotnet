@@ -42,7 +42,7 @@ Please install [pre-commit](https://pre-commit.com/#install)
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_deployment_id"></a> [deployment\_id](#input\_deployment\_id) | The deployment identifier (eg: gm-dev-usea1) | `string` | n/a | yes |
+| <a name="input_deployment_id"></a> [deployment\_id](#input\_deployment\_id) | The deployment identifier (eg: sli-dev-usea1) | `string` | n/a | yes |
 | <a name="input_service_image_name"></a> [service\_image\_name](#input\_service\_image\_name) | The full Docker image name that the ECS service will use | `string` | `"ppowersn/always-healthy:latest"` | no |
 
 ## Outputs

@@ -1,5 +1,5 @@
 variable "deployment_id" {
-  description = "The deployment identifier (eg: gm-dev-usea1)"
+  description = "The deployment identifier (eg: sli-dev-usea1)"
   type        = string
 }
 

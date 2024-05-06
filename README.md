@@ -1,32 +1,10 @@
 # PROJECT TEMPLATE NOTES
 
-This repository is a template for creating new projects. It is intended to be used as a starting point for new projects.
-
-This template contains references to the fictional team named 'AccountServices' and a fictional project that it owns called
-'MmxApiAdapter'. These references should be replaced with the actual team and project names.
-
-To use this template, first clone it to a new repository with the name of the project:
-
-```bash
-git clone git@github.com:sorenson-eng/arc-blueprints.git <RepositoryName>
-```
-
-Then run the initialization script, which will customize the template for the new project and initialize the Git
-repository:
-
-```bash
-cd <RepositoryName>
-./blueprint/init_repo.sh <TeamName> <ProjectName>  # eg: ./blueprint/init_repo.sh AccountServices CoolService
-```
-
 ## Post-Initialization Steps
 
 - In order to enable deployments to the target AWS accounts, the GitHub repository must be granted access via OIDC. This
 currently requires an IT ticket to be submitted, including details about the source GitHub repository and the target AWS
 accounts.
-
-- The GitHub repository must be configured with the GPR authentication token in order to access the GitHub Packages.
-This is a repository-level secret and must be named GPR_AUTH_TOKEN.
 
 - The list of supported deployments must be configured in the deployments.json file (see the 'ops' directory).
 
@@ -38,26 +16,18 @@ workflow files).
 
 * * *
 
-# ProjectName
+# MMX API Adapter
 
-(Insert high-level description of project here)
+Service that provides a MMX-compatible API for interacting with pre-existing SLI endpoint devices.
 
 ## Team
 
-(Add team information here. Examples below)
-
-EXAMPLE: This repository is owned and maintained by the [**Relay**](https://sorenson.atlassian.net/wiki/spaces/R/pages/102924467/The+Team) team.
-
-EXAMPLE: This repository is owned and maintained by the [**Account Services**](https://sorenson.atlassian.net/wiki/spaces/C/overview#The-Team) team.
-
-EXAMPLE: This repository is owned and maintained by the [**Communications**](https://sorenson.atlassian.net/wiki/spaces/CI/pages/12451842/The+Team)
+This repository is owned and maintained by the [**Account Services**](https://sorenson.atlassian.net/wiki/spaces/C/overview#The-Team) team.
 
 
 ## Getting Started
 
 ### Prerequisites
-
-(Provide any prerequisite setup steps that are required to get the local environment configured. Examples below)
 
 The following software should be installed before attempting to build or deploy the project:
 

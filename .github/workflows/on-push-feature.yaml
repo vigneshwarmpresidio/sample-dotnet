@@ -12,6 +12,6 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yaml
     with:
-      deployment_name: "gm-dev-usea1"
+      deployment_name: "sli-dev-usea1"
       push_artifacts: "false"
     secrets: inherit

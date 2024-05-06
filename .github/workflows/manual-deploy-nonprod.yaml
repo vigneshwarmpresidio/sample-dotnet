@@ -7,8 +7,8 @@ on:
         required: true
         type: choice
         options:
-          - 'gm-dev-usea1'
-          - 'gm-qa-usea1'
+          - 'sli-dev-usea1'
+          - 'sli-qa-usea1'
 
 
 jobs:

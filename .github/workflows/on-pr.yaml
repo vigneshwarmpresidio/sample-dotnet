@@ -13,7 +13,7 @@ jobs:
   build:
     uses: ./.github/workflows/ci.yaml
     with:
-      deployment_name: "gm-qa-usea1"
+      deployment_name: "sli-qa-usea1"
       push_artifacts: false
     secrets: inherit
 
@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate Terraform Cloud config
         env:
-          TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-gm-qa-usea1"
+          TFCLOUD_WORKSPACE_NAME: "${{ github.event.repository.name }}-sli-qa-usea1"
         run: |
           cat ./backend.tf.tmpl | envsubst > backend.tf
 
@@ -79,5 +79,5 @@ jobs:
         working-directory: ./ops/terraform
         run: terraform plan -no-color
         env:
-          TF_VAR_deployment_id: gm-qa-usea1
+          TF_VAR_deployment_id: sli-qa-usea1
           TF_VAR_service_image_name: ""

@@ -1,25 +1,25 @@
 {
     "common": {
-        "component_name": "ft-mmx-api-adapter",
+        "component_name": "ast-mmx-api-adapter",
         "service_desired_count": 1,
         "service_min_capacity": 1,
         "service_max_capacity": 3
     },
-    "gm-dev-usea1": {
-        "product": "gm",
+    "sli-dev-usea1": {
+        "product": "sli",
         "aws_account_id": "999999999999",
         "aws_region": "us-east-1",
         "environment": "dev",
-        "outputs_workspace": "AccountServices-Outputs-GM-DEV-USEA1",
-        "r53_public_zone_name": "dev-gm-usea1.frontierteam.sorensoncloud.com"
+        "outputs_workspace": "AccountServices-Outputs-SLI-DEV-USEA1",
+        "r53_public_zone_name": "dev-sli-usea1.frontierteam.sorensoncloud.com"
 
     },
-    "gm-qa-usea1": {
-        "product": "gm",
+    "sli-qa-usea1": {
+        "product": "sli",
         "aws_account_id": "888888888888",
         "aws_region": "us-east-1",
         "environment": "qa",
-        "outputs_workspace": "AccountServices-Outputs-GM-QA-USEA1",
-        "r53_public_zone_name": "qa-gm-usea1.frontierteam.sorensoncloud.com"
+        "outputs_workspace": "AccountServices-Outputs-SLI-QA-USEA1",
+        "r53_public_zone_name": "qa-sli-usea1.frontierteam.sorensoncloud.com"
     }
 }

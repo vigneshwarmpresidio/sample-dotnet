@@ -9,12 +9,12 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yaml
     with:
-      deployment_name: "gm-qa-usea1"
+      deployment_name: "sli-qa-usea1"
     secrets: inherit
 
   cd:
     uses: ./.github/workflows/cd.yaml
     needs: ci
     with:
-      deployment_name: "gm-qa-usea1"
+      deployment_name: "sli-qa-usea1"
     secrets: inherit
