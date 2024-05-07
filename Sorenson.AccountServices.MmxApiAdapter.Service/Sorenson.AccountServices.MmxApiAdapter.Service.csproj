@@ -8,4 +8,8 @@
     <RootNamespace>Sorenson.AccountServices.MmxApiAdapter.Service</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>
