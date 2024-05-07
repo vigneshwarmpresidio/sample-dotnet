@@ -13,9 +13,6 @@ jobs:
     secrets: inherit
 
   cd:
-    permissions:
-      id-token: write
-      contents: read
     uses: ./.github/workflows/cd.yaml
     needs: ci
     with:
